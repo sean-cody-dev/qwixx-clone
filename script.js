@@ -12,6 +12,9 @@ let currentDiceRoll = {};
 let scoreTrack = {};
 let scoreOptions = {};
 let isInitialRoll = true;
+let turnScoreCount = 0;
+let scoredThisTurn = 0;
+let penaltyCount = 0;
 
 // Rolls a single dice
 function rollDice() {
@@ -48,43 +51,8 @@ function showDiceRoll() {
 
 }
 
-// creates score buttons
-// function createScoreButtons() {
-//     const colors = Object.keys(scoreOptions); // Get all color keys from the scoreOptions object
-
-//     colors.forEach(color => {
-//         const buttonRow = document.getElementById(`${color}-score-buttons-row`); // Get the div for this color
-
-//         if (!buttonRow) {
-//             console.error(`No element found for ${color}-score-buttons-row`);
-//             return;
-//         }
-
-//         buttonRow.innerHTML = ''; // Clear previous buttons
-
-//         let seenSums = new Set(); // Set to track seen sums and ensure uniqueness
-
-//         // Iterate over each option and create a button only for unique sum values
-//         scoreOptions[color].forEach((option, index) => {
-//             if (!seenSums.has(option.sum)) { // Check if the sum has not been seen
-//                 seenSums.add(option.sum); // Mark this sum as seen
-
-//                 const button = document.createElement('button'); // Create a new button
-//                 button.textContent = option.sum; // Set button text to the sum
-//                 button.className = 'circle-button'; // Assuming you have CSS styling for 'circle-button'
-//                 button.classList.add('score-button'); // Add additional class if needed
-//                 button.addEventListener('click', () => {
-//                     console.log(`Button for ${color} with sum ${option.sum} clicked`);
-//                     // Additional functionality upon clicking the button can be added here
-//                 });
-
-//                 buttonRow.appendChild(button); // Append the button to the corresponding div
-//             }
-//         });
-//     });
-// }
-
-function createScoreButtons() {
+// Updates existing score buttons
+function updateScoreButtons() {
     const colors = Object.keys(scoreOptions); // Get all color keys from the scoreOptions object
 
     colors.forEach(color => {
@@ -95,113 +63,158 @@ function createScoreButtons() {
             return;
         }
 
-        buttonRow.innerHTML = ''; // Clear previous buttons
+        const buttons = buttonRow.getElementsByTagName('button'); // Get all buttons in the row
+        const availableSums = scoreOptions[color].map(option => option.sum); // Get all available sums for the color
 
-        let uniqueSums = new Set(); // Set to track unique sums
-        let sortedOptions = []; // Array to hold sorted and unique options
+        
+        Array.from(buttons).forEach(button => {
+            const buttonValue = parseInt(button.getAttribute('value'), 10); // Get the value attribute of the button as an integer
 
-        // First, filter out unique sums
-        scoreOptions[color].forEach(option => {
-            if (!uniqueSums.has(option.sum)) {
-                uniqueSums.add(option.sum);
-                sortedOptions.push(option);
+            // FIXME: REFACTOR Make the following conditional segments dryer
+            // if turnScoreCount >=2, reset button classes
+            if (turnScoreCount >= 2) {
+                button.classList.remove('button-available');
+            } else if (availableSums.includes(buttonValue) && !scoreTrack[color].closed.includes(buttonValue) && !scoreTrack[color].scored.includes(buttonValue)) {
+            // Only do this if button isn't already closed or scored
+                button.classList.add('button-available');
+            } else {
+                button.classList.remove('button-available');
             }
-        });
 
-        // Sort the options based on the color
-        if (color === 'red' || color === 'yellow') {
-            sortedOptions.sort((a, b) => a.sum - b.sum); // Ascending sort
-        } else if (color === 'green' || color === 'blue') {
-            sortedOptions.sort((a, b) => b.sum - a.sum); // Descending sort
-        }
+            // If button is closed, show it as closed
+            if (scoreTrack[color].closed.includes(buttonValue)) {
+                button.classList.add('button-closed');
+            } else {
+                button.classList.remove('button-closed');
+            }
+            
+            // If button is scored, show it as scored
+            if (scoreTrack[color].scored.includes(buttonValue)) {
+                button.classList.add('button-scored');
+            } else {
+                button.classList.remove('button-scored');            
+            }
 
-        // Create buttons for sorted and unique options
-        sortedOptions.forEach(option => {
-            const button = document.createElement('button');
-            button.textContent = option.sum;
-            button.className = 'circle-button';
-            button.classList.add('score-button');
-            button.addEventListener('click', () => {
-                console.log(`Button for ${color} with sum ${option.sum} clicked`);
-                // Additional functionality upon clicking the button can be added here
-            });
+            // Lock Button Handling
+            if (!buttonValue) {
+                button.classList.add('button-closed');
+            } 
+            
+            if (!buttonValue && scoreTrack[color].scored.length >= 5 && scoreTrack[color].open.length === 0) {
+                button.classList.remove('button-closed');
+            }
 
-            buttonRow.appendChild(button); // Append the button to the corresponding div
         });
     });
-}
 
+    // Enables/Disables Pass Button
+    if (turnScoreCount < 2) {
+        passBtn.classList.remove('button-disabled');
+        passBtn.disabled = false;
+    }
+
+    if (turnScoreCount >= 2) {
+        passBtn.classList.add('button-disabled');
+        passBtn.disabled = true;
+    }
+}
 
 // initiates a turn
 function initiateTurn() {
+    turnScoreCount = 0; // reset turnScoreCount
+    scoredThisTurn = 0; // reset scoredThisTurn
     turnRoll();
     showDiceRoll();
     checkAvailableScores();
     // populates buttons with score options
-    createScoreButtons();
+    updateScoreButtons();
 }
 
 // rolls all active dice
 function turnRoll() {
     for (diceColor in activeDice) {
-        currentDiceRoll[diceColor] = rollDice();
+        if (activeDice[diceColor]) {
+            currentDiceRoll[diceColor] = rollDice();
+        }
     };
-    console.log('currentDiceRoll:', currentDiceRoll);
 };
 
 // Marks score
 function markScore(score) {
-    const color = score.color;
-    const value = score.value;
-    const colorTrack = scoreTrack[color];
-
-    // Check if the score is already scored
-    if (colorTrack.scored.includes(value)) {
-        console.log('already scored');
-        return;
+    if (turnScoreCount >= 2) {
+        // alert to roll dice again
+        alert('roll the dice again!');
+    } else {
+        
+        const color = score.attributes.color.value;
+        const value = Number(score.value);
+        
+        // Check if the score is already scored
+        if (scoreTrack[color].scored.includes(value)) {
+            console.log('already scored');
+            return;
+        }
+        
+        // Check if the score is closed
+        if (scoreTrack[color].closed.includes(value)) {
+            console.log('cannot score this one');
+            return;
+        }
+        
+        // Check if the score is open and can be scored
+        if (scoreTrack[color].open.includes(value)) {
+            // console.log('scored');
+            // Remove the value from 'open'
+            scoreTrack[color].open = scoreTrack[color].open.filter(item => item !== value);
+            // Add the value to 'scored'
+            scoreTrack[color].scored.push(value);
+        }
+        turnScoreCount++;
+        scoredThisTurn++;
+        // console.log('current scoreTrack:', scoreTrack);
+        closeScores(score);
+        checkAvailableScores();
+        updateScoreButtons();
     }
-
-    // Check if the score is closed
-    if (colorTrack.closed.includes(value)) {
-        console.log('cannot score this one');
-        return;
-    }
-
-    // Check if the score is open and can be scored
-    if (colorTrack.open.includes(value)) {
-        console.log('scored');
-        // Remove the value from 'open'
-        colorTrack.open = colorTrack.open.filter(item => item !== value);
-        // Add the value to 'scored'
-        colorTrack.scored.push(value);
-    }
-    console.log('current scoreTrack:', scoreTrack);
-    closeScores(score);
 }
 
 // Closes values less than all scored, unless marked as scored
 function closeScores(score) {
-    const color = score.color;
-    const colorTrack = scoreTrack[color];
+    const color = score.attributes.color.value;
+    const scoreValue = Number(score.value);
+    const valuesToClose = [];
 
-    if (colorTrack.scored.length === 0) {
+    if (scoreTrack[color].scored.length === 0) {
         console.log('No scores have been made yet for this color.');
         return;
     }
 
     // Get the highest scored value
-    const highestScored = Math.max(...colorTrack.scored);
+    const highestScored = Math.max(...scoreTrack[color].scored);
 
-    // Find all open values that are less than the highest scored value
-    const valuesToClose = colorTrack.open.filter(value => value < highestScored);
+    // If red or yellow
+    if (color === 'red' || color === 'yellow') {
+        // Find all open values that are less than the highest scored value
+        valuesToClose.push(...scoreTrack[color].open.filter(value => value < scoreValue && !scoreTrack[color].scored.includes(value)));
 
-    // Remove these values from 'open'
-    colorTrack.open = colorTrack.open.filter(value => value >= highestScored);
+        // Remove these values from 'open'
+        scoreTrack[color].open = scoreTrack[color].open.filter(value => value >= scoreValue);
+    }
+
+    // If green or blue
+    if (color === 'green' || color === 'blue') {
+        // Find all open values that are less than the highest scored value
+        valuesToClose.push(...scoreTrack[color].open.filter(value => value > scoreValue && !scoreTrack[color].scored.includes(value)));
+        
+        // Remove these values from 'open'
+        scoreTrack[color].open = scoreTrack[color].open.filter(value => value <= scoreValue);
+    }
 
     // Add these values to 'closed'
-    colorTrack.closed = colorTrack.closed.concat(valuesToClose);
+    scoreTrack[color].closed.push(...valuesToClose);
 
-    console.log(`Closed values less than ${highestScored} for ${color}`);
+    // console.log(`Closed values left of ${scoreValue} for ${color}`);
+
 }
 
 function checkAvailableScores() {
@@ -210,42 +223,63 @@ function checkAvailableScores() {
     const coloredDice = {};     // To store the values of colored dice
 
     // Separate white and colored dice into different arrays/objects
-    for (const diceName in currentDiceRoll) {
+    Object.keys(currentDiceRoll).forEach((diceName) => {
         if (diceName.startsWith('white')) {
             whiteDiceNames.push(diceName);
             whiteDiceValues.push(currentDiceRoll[diceName]);
         } else {
             coloredDice[diceName] = currentDiceRoll[diceName];
         }
-    }
+    });
 
-    // Calculate possible score values for each colored dice
-    for (const color in coloredDice) {
+    // Check the value of turnScoreCount and adjust scoreOptions accordingly
+    Object.keys(coloredDice).forEach((color) => {
         scoreOptions[color] = [];
 
-        // Calculate scores with each white dice
-        whiteDiceValues.forEach((whiteValue, index) => {
-            scoreOptions[color].push({
-                [color]: coloredDice[color],
-                [whiteDiceNames[index]]: whiteValue,
-                sum: coloredDice[color] + whiteValue
+        if (turnScoreCount === 0) {
+            // Only include the sum of the white dice
+            if (whiteDiceValues.length === 2) {
+                const sumOfWhites = whiteDiceValues[0] + whiteDiceValues[1];
+                scoreOptions[color].push({
+                    [whiteDiceNames[0]]: whiteDiceValues[0],
+                    [whiteDiceNames[1]]: whiteDiceValues[1],
+                    sum: sumOfWhites
+                });
+            } else if (whiteDiceValues.length === 1) {
+                scoreOptions[color].push({
+                    [whiteDiceNames[0]]: whiteDiceValues[0],
+                    sum: whiteDiceValues[0]
+                });
+            }
+        } else if (turnScoreCount === 1) {
+            // Exclude the sum of the white dice
+            whiteDiceValues.forEach((whiteValue, index) => {
+                scoreOptions[color].push({
+                    [color]: coloredDice[color],
+                    [whiteDiceNames[index]]: whiteValue,
+                    sum: coloredDice[color] + whiteValue
+                });
             });
-        });
-
-        // If there are two white dice, include their combined sum
-        if (whiteDiceValues.length === 2) {
-            const sumOfWhites = whiteDiceValues[0] + whiteDiceValues[1];
-            // Also consider the sum of both white dice alone
-            scoreOptions[color].push({
-                [whiteDiceNames[0]]: whiteDiceValues[0],
-                [whiteDiceNames[1]]: whiteDiceValues[1],
-                sum: sumOfWhites
-            });
+        } else {
+            // console.error('Error: turnScoreCount is greater than one');
         }
-    }
+    });
 
-    console.log('scoreOptions:', scoreOptions);
+    // console.log('scoreOptions:', scoreOptions);
     return scoreOptions;
+
+}
+
+// Handles Passing on a Score
+function handlePass() {
+    turnScoreCount++; // increment score count
+    checkAvailableScores();
+    updateScoreButtons();
+
+    // if no points were scored this turn, player gets a penalty
+    if (turnScoreCount >= 2 && scoredThisTurn === 0) {
+        penaltyCount++;
+    }
 }
 
 // Helper function to check if a dice name represents a white dice
@@ -280,5 +314,17 @@ function chooseScore(chosenColor, chosenIndex) {
     return chosenScore.sum;  // Return the sum of the chosen score
 }
 
+// Removes color from activeDice object
+function closeColor(e) {
+    const color = e.target.attributes.color.value;
+    activeDice[color] = false;
+
+    const inactiveDice = document.getElementById(`dice-${color}`);
+    setAttributes(inactiveDice, {
+        style: 'color: #808080',
+    });
+}
+
 // Event Listeners
 rollDiceBtn.addEventListener('click', initiateTurn)
+passBtn.addEventListener('click', handlePass)
