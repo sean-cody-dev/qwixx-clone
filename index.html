@@ -12,10 +12,12 @@
 </head>
 <body>
     <div class="game-container">
-        <button id="start-game-button" class="start-game-button">Start Game!</button>
-        <button class="roll-dice-button hidden" id="roll-dice-button">Roll Dice</button>
-        <!-- Pass Button Initializes as Disabled -->
-        <button class="pass-button button-disabled hidden" id="pass-button">Pass</button>
+        <div class="button-container">
+            <button id="start-game-button" class="start-game-button">New Game!</button>
+            <button class="roll-dice-button hidden" id="roll-dice-button">Roll Dice</button>
+            <!-- Pass Button Initializes as Disabled -->
+            <button class="pass-button button-disabled hidden" id="pass-button">Pass</button>
+        </div>
         <div class="dice-container hidden" id="dice-container">
             <i class="fa-solid fa-dice-one" style="color: #000000;" id="dice-white-one"></i>
             <i class="fa-solid fa-dice-one" style="color: #000000;" id="dice-white-two"></i>
@@ -26,7 +28,27 @@
         </div>
         <div class="score-buttons-container" id="score-buttons-container">
         </div>
-        <div class="score-row-container" id="score-row-container"></div>
+        <h2 class="penalty-title hidden" id="penalty-title">Penalties (-5 Points)</h1>
+        <div class="penalty-count-container hidden" id="penalty-count-container">
+            <div class="penalty-count-box" id="penalty-count-box-1"></i></div>
+            <div class="penalty-count-box" id="penalty-count-box-2"></div>
+            <div class="penalty-count-box" id="penalty-count-box-3"></div>
+            <div class="penalty-count-box" id="penalty-count-box-4"></div>
+        </div>
+        <h2 class="score-title hidden" id="score-title">Total Score</h1>
+        <div class="score-row-container hidden" id="score-row-container">
+            <div class="score-box border-red" id="score-box-red"></div>
+            <i class="fa-solid fa-plus"></i>
+            <div class="score-box border-yellow" id="score-box-yellow"></div>
+            <i class="fa-solid fa-plus"></i>
+            <div class="score-box border-green" id="score-box-green"></div>
+            <i class="fa-solid fa-plus"></i>
+            <div class="score-box border-blue" id="score-box-blue"></div>
+            <i class="fa-solid fa-minus"></i>
+            <div class="score-box" id="score-box-penalty"></div>
+            <i class="fa-solid fa-equals"></i>
+            <div class="score-box" id="score-box-total"></div>
+        </div>
     </div>
     <!-- Script -->
     <script src="start-game.js"></script>

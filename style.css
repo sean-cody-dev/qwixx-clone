@@ -1,3 +1,13 @@
+:root {
+    --gray: gray;
+    --box-shadow-light: 2px 2px 2px rgba(0, 0, 0, 0.5);
+    --box-shadow-medium: 5px 5px 5px rgba(0, 0, 0, 0.5);
+
+    --border-radius-small: 3px;
+    --border-radius-medium: 10px;
+    --border-radius-large: 20px;
+}
+
 html {
     box-sizing: border-box;
 }
@@ -5,15 +15,37 @@ html {
 body {
     margin: 0;
     min-height: 100vh;
-}
-
-.game-container {
     height: 100vh;
     width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family:'Wellfleet', sans-serif;
+}
+
+.game-container {
+    width: 95%;
+    height: 95%;
+    max-width: 900px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
+    border: 3px solid #121212;
+    border-radius: var(--border-radius-large);
+}
+
+.game-title {
+    text-transform: uppercase;
+}
+
+.button-container {
+    display: flex;
+    width: 95%;
+    justify-content: space-evenly;
+    margin-bottom: 20px;
+
 }
 
 button {
@@ -31,7 +63,7 @@ button {
     font-size: 20px;
     background-color: #F16D00;
     border-radius: 5px;
-    box-shadow: 5px 5px 30px 20px rgba(0,0,0,0.5);
+    box-shadow: var(--box-shadow-medium)
 }
 
 button:active {
@@ -43,8 +75,8 @@ button:active {
     width: 80%;
     justify-content: center;
     align-items: center;
-    margin-top: 30px;
     flex-wrap: wrap;
+    margin-bottom: 20px;
 }
 
 .fa-dice-one, .fa-dice-two, .fa-dice-three, .fa-dice-four, .fa-dice-five, .fa-dice-six {
@@ -53,33 +85,33 @@ button:active {
 }
 
 .score-buttons-container {
-    margin-top: 30px;
+    width: 100%;
     display:flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 20px;
 }
 
-.score-buttons-container {
-    margin-top: 30px;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-}
 .score-buttons-row {
     display: flex;
     justify-content: space-between;
+    width: 95%;
+    max-width: 800px;
+    border-radius: var(--border-radius-medium);
+    margin-bottom: 10px;
+    box-shadow: var(--box-shadow-light);
 }
 
 .score-button {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    margin: 20px;
+    border-radius: var(--border-radius-small);
+    margin: 15px;
     font-size: 1.5rem;
     cursor: default;
     transition: transform 0.5s;
+    color: #000;
 }
 
 .button-available {
@@ -98,19 +130,19 @@ button:active {
     transition: transform 0.1s, box-shadow 0.1s; /* Faster transition for pressed effect */
 }
 
-.red > * {
+.red {
     background-color: red;
 }
 
-.green > * {
+.green {
     background-color: green;
 }
 
-.blue > * {
+.blue {
     background-color: blue;
 }
 
-.yellow > * {
+.yellow {
     background-color: yellow;
     color: black;
 }
@@ -132,6 +164,53 @@ button:active {
     color: #000; /* Ensure the text is readable */
     cursor: not-allowed; /* Indicate that this button is not clickable */
     pointer-events: none;
+}
+
+
+.penalty-count-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.score-row-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.score-box, .penalty-count-box {
+    border: solid 3px;
+    border-radius: 5px;
+    font-size: 20px;
+    font-family: 'Wellfleet', sans-serif;
+    min-width: 50px;
+    min-height: 50px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 10px;
+    box-shadow: var(--box-shadow-light);
+}
+
+.border-red {
+    border-color: red;
+}
+
+.border-yellow {
+    border-color: yellow;
+}
+
+.border-green {
+    border-color: green;
+}
+
+.border-blue {
+    border-color: blue;
 }
 
 .hidden {
